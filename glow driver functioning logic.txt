@@ -1,0 +1,20 @@
+jumpered for the arduino to be powered from the receiver:
+----------------------------------------------------------
+
+when the receiver is off the arduino is not powered so glows will be off.
+
+if for any reason there is no receiver pulse, but still receiver power, then the glow brightness is set to the value determined by the trim pot.
+
+minimum receiver pulse length turns glows off.
+
+
+jumpered for the arduino to be powered from the glow lipos (for bench running):
+----------------------------------------------------------
+
+there is no receiver pulse, so the glow brightness is set to the value determined by the trim pot.
+
+minimum trim pot value turns glows off.
+
+
+
+
