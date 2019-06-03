@@ -3,7 +3,7 @@
  ON-BOARD GLOW DRIVER - for nine cylinder radial
   Phil Wilson 2013
  ----------------------------------------------------------------------------------------
- Run on an Arduino pro-mini. Not tested on other boards, and may not work because of low level stuff
+ Run on an Arduino pro-mini. Not tested on other boards, and may not work on them because of low level stuff
  PWM is set-up on pin 3 using timer2
  Each glowplug is assigned it's own output pin which switches it's glow plug via a MOSFET
  Each time there is a pulse, one of the glow plug output pins is turned on for the duration of the pulse
