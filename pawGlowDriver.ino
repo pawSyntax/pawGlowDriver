@@ -2,7 +2,7 @@
  ON-BOARD GLOW DRIVER - for nine cylinder radial
   Phil Wilson 2013
  ----------------------------------------------------------------------------------------
- Run on an Arduino pro-mini, Uno or similar
+ Run on an Arduino pro-mini. Not tested on other boards, and may not work because of low level stuff
  PWM is set-up on pin 3 using timer2
  Each glowplug is assigned it's own output pin which switches it's glow plug via a MOSFET
  Each time there is a pulse, one of the glow plug output pins is turned on for the duration of the pulse
@@ -23,39 +23,39 @@
  */
 
 
-  //declare constants and variables
- //--------------------------------------------------------------------------------------
+//declare constants and variables
+//--------------------------------------------------------------------------------------
 
-  //arduino pins for glowplug outputs
- const int PLUG_PINS[9] = {2,4,5,6,7,9,10,11,12};  
+//arduino pins for glowplug outputs
+const int PLUG_PINS[9] = {2,4,5,6,7,9,10,11,12};  
 
-  const int THROTTLE_PIN = 8;   //connect reciever throttle channel (well, actually the channel mixed from throttle) to arduino pin 8
-          //standard receiver pulses are approx 1-2msec long
- const int MIN_PULSE_LENGTH = 800; //shortest length of throttle pulse in usec
- const int MAX_PULSE_LENGTH = 2100; //longest value for throttle pulse in usec
+const int THROTTLE_PIN = 8;   //connect reciever throttle channel (well, actually the channel mixed from throttle) to arduino pin 8
+                              //standard receiver pulses are approx 1-2msec long
+const int MIN_PULSE_LENGTH = 800; //shortest length of throttle pulse in usec
+const int MAX_PULSE_LENGTH = 2100; //longest value for throttle pulse in usec
 
-  const int LED_PIN = 13;    //the arduino board has an LED on pin 13. I'm using it to glow in proportion the glow plug brightness to 
-           // give  a visual indication of the glow power
- const int PWM_PIN = 3;    //I'm going to set up PWM on pin 3 with timer2
+const int LED_PIN = 13;    //the arduino board has an LED on pin 13. I'm using it to glow in proportion the glow plug brightness to 
+         // give  a visual indication of the glow power
+const int PWM_PIN = 3;    //I'm going to set up PWM on pin 3 with timer2
 
-  //trim pot is used to set glow brightness when no receiver connected
- const int TRIMPOT_PIN = 3;   //analog pin 3
+//trim pot is used to set glow brightness when no receiver connected
+const int TRIMPOT_PIN = 3;   //analog pin 3
 
-  volatile int plugNumber = 0;  //counter to increment the GlowPlugs in the interrupt routine
+volatile int plugNumber = 0;  //counter to increment the GlowPlugs in the interrupt routine
 
 
-  //pointers to the AVR ports for glowplug output pins
- //this is so the ports can be accessed in an array - interesting to have done but didn't gain much optimization
- volatile uint8_t* plugPort[9] = {&PORTB, &PORTB, &PORTB, &PORTB, &PORTD, &PORTD, &PORTD, &PORTD, &PORTD}; 
+//pointers to the AVR ports for glowplug output pins
+//this is so the ports can be accessed in an array - interesting to have done but didn't gain much optimization
+volatile uint8_t* plugPort[9] = {&PORTB, &PORTB, &PORTB, &PORTB, &PORTD, &PORTD, &PORTD, &PORTD, &PORTD}; 
 
-  //AVR port bit numbers for the arduino GlowPlug pins
- const int plugPortBit[9] = {1,2,3,4,2,4,5,6,7};  
+//AVR port bit numbers for the arduino GlowPlug pins
+const int plugPortBit[9] = {1,2,3,4,2,4,5,6,7};  
 
 void setup()
 {
  //Serial.begin(9600);    //just for testing
 
-    pinMode(THROTTLE_PIN, INPUT);
+ pinMode(THROTTLE_PIN, INPUT);
  pinMode(LED_PIN, OUTPUT);
  pinMode(PWM_PIN, OUTPUT);   //doesn't need to be set as output to work the PMW unless you want to actually use the output
            //but it is quite useful for testing
@@ -83,25 +83,25 @@ void setup()
  */ 
   
 
-  // Set up Timer 2 to do pulse width modulation on pin3
+ // Set up Timer 2 to do pulse width modulation on pin3
  //------------------------------------------------------------------------------------------------------------
 
-  // Set fast PWM mode with TOP = 0xff: WGM22:0 = 3  (p.150)
+ // Set fast PWM mode with TOP = 0xff: WGM22:0 = 3  (p.150)
  TCCR2A |= _BV(WGM21) | _BV(WGM20);
  TCCR2B &= ~_BV(WGM22);
 
-  // Do non-inverting PWM on pin OC2B (arduino pin 3) (p.159).
+ // Do non-inverting PWM on pin OC2B (arduino pin 3) (p.159).
  // OC2A (arduino pin 11) stays in normal port operation:
  // COM2B1=1, COM2B0=0, COM2A1=0, COM2A0=0
  TCCR2A = (TCCR2A | _BV(COM2B1)) & ~(_BV(COM2B0) | _BV(COM2A1) | _BV(COM2A0));
 
 
-  //prescalar sets the frequency of the counter (p.162 AVR data sheet)
+ //prescalar sets the frequency of the counter (p.162 AVR data sheet)
  //------------------------------------------------------------
  // No prescaler (p.162) - clear the last 3 bits (CS22:0) in TCCR2B:
  //TCCR2B = (TCCR2B & ~(_BV(CS22) | _BV(CS21))) | _BV(CS20);
 
-  //another way, this time set all CS bits, for lowest prescalar speed:
+ //another way, this time set all CS bits, for lowest prescalar speed:
  //TCCR2B = (TCCR2B & B11111000) | B00000111;
   
  TCCR2B = (TCCR2B & B11111000) | B00000011; //divisor 32. so approx 2kHz for pin3 PWM. gives 216Hz on each plug 
@@ -151,16 +151,16 @@ void loop()
   if (throttlePulseLength == 0)  //no receiver input - jumpered to run off the glow battery for running engine on test bed
   throttlePulseLength = readTrimPot();
 
-  //check it is not outside range because 'map' does not check it
+ //check it is not outside range because 'map' does not check it
  throttlePulseLength = constrain(throttlePulseLength, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
 
-  //for testing....
+ //for testing....
  ////////////////////////////////////////////////////////
  //throttlePulseLength = 1000;
  /////////////////////////////////////////////////////////
 
 
-  // map the throttle pulse length to 8bits for the timer compare register
+ // map the throttle pulse length to 8bits for the timer compare register
  OCR2B = map(throttlePulseLength, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH, 0, 255); 
 
   /* for testing
